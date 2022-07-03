@@ -17,7 +17,7 @@ export async function getPage(ua: keyof typeof userAgents = 'standard'): Promise
 
   await page.setUserAgent(userAgents[ua]);
 
-  page.setViewport({ width: 800, height: 1680 });
+  // page.setViewport({ width: 800, height: 1200 });
   page.on('error', function (err) {
     err.message = `[BROWSER] ${err.message}`;
     console.error(err);

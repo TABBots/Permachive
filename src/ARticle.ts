@@ -2,11 +2,12 @@ import axios from "axios"
 import { CronJob } from "cron";
 
 import crypto from "crypto"
-import { PathLike, readFileSync } from "fs";
+import { fstat, PathLike, readFileSync } from "fs";
 import { pageArchiver } from "./pageArchiver";
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import { compareTwoStrings } from "string-similarity"
 import Bundlr from "@bundlr-network/client";
+import fs from "fs";
 
 import knex, { Knex } from "knex";
 import AsyncIterPromisePool from "./AsyncIteratorPromisePool";
@@ -25,7 +26,7 @@ interface archiveRow {
   updates: number
 }
 
-export default class ARticle {
+export default class Article {
 
   private keys
   private db: Knex
@@ -48,7 +49,7 @@ export default class ARticle {
     this.db = knex({
       client: "better-sqlite3",
       connection: {
-        filename: "./ARchiver.db",
+        filename: "./ARchiver.db", //Shoutout to Bundlr <3
         flags: []
       },
       asyncStackTraces: true,
@@ -137,7 +138,7 @@ export default class ARticle {
       await writeFile(indexPath, siteData)
 
       const tags = [
-        { name: "Application", value: "ARticle" },
+        { name: "Application", value: "Permachive - Article Archiver" },
         { name: "Content-Type", value: "text/html" },
         { name: "Query-ID", value: `${this.queryID}` },
         { name: "URL", value: `${url}` }
@@ -225,7 +226,7 @@ process.on('unhandledRejection', (reason, p) => {
 
 export async function init(configPath) {
   const config = JSON.parse(readFileSync(configPath).toString());
-  const article = new ARticle(config)
+  const article = new Article(config)
   await article.ready();
   createCron("update sources", "0 */3 * * * *", () => article.updateNewsApi())
   createCron("scan for changes", "0 */1 * * * *", () => article.update())

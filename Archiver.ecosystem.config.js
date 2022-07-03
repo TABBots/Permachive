@@ -8,12 +8,12 @@ module.exports = // ecosystem.js
 {
     "apps": [
         {
-            "name": "TwittAR",
-            "script": "build/TwittAR.js",
+            "name": "Twitter Archiver",
+            "script": "build/Twitter.js",
         },
         {
-            "name": "ARticle",
-            "script": "build/ARticle.js",
+            "name": "Article Archiver",
+            "script": "build/Article.js",
         }
     ],
 };

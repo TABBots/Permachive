@@ -1,13 +1,16 @@
 import Twitter from "node-tweet-stream";
 import Bundlr from "@bundlr-network/client"
-import tmp from "tmp-promise"
+import tmp, { fileSync } from "tmp-promise"
 import * as p from "path"
 import { mkdir, unlink } from "fs/promises";
 import { PathLike, promises, readFileSync } from "fs";
 import { createWriteStream } from "fs";
-import puppeteer, { launch } from 'puppeteer-core';
+import { getPage, navigatePageSimple } from './lib/puppeteer-setup';
 import axios from "axios"
-import ARticle from "./ARticle";
+import Article from "./Article";
+import fs from "fs";
+import { compress } from "compress-images";
+
 
 let TPS = 0;
 let pTPS = 0
@@ -19,7 +22,7 @@ const checkPath = async (path: PathLike): Promise<boolean> => { return promises.
 
 let twitter
 let bundlr
-let article: ARticle;
+let article: Article;
 
 
 async function main() {
@@ -34,9 +37,8 @@ async function main() {
         token_secret: keys.tkeys.token_secret,
         tweet_mode: "extended"
     })
-    console.log(config);
     bundlr = new Bundlr(config.bundlrNode, "arweave", keys.arweave)
-    article = new ARticle(config)
+    article = new Article(config)
 
     console.log(`Loaded with account address: ${bundlr.address}`)
     //await processTweet(tweet)
@@ -59,7 +61,10 @@ async function main() {
 
 async function processTweet(tweet) {
     let tmpdir;
+    const page = await getPage();
+
     try {
+
         TPS++
         if (tweet.retweeted_status) { //retweet, ignore.
             return;
@@ -74,13 +79,14 @@ async function processTweet(tweet) {
          */
 
         const tags = [
-            { name: "Application", value: "TwittAR" },
+            { name: "Application", value: "Permachive - Twitter Archiver" },
             { name: "Tweet-ID", value: `${tweet.id_str}` },
             { name: "Author-ID", value: `${tweet.user.id_str}` },
             { name: "Author-Name", value: `${tweet.user.name}` },
             { name: "Author-Handle", value: `@${tweet.user.screen_name}` },
-            { name: "Content-Type", value: "application/json" },
-            { name: "Key-Word-List", value: "ukraine3" }
+            { name: "Content-Type", value: "image/png" },
+            { name: "Key-Word-List", value: "Ethiopia" },
+            { name: "Tweet-Content", value: JSON.stringify(tweet) }
         ];
 
         if (tweet?.in_reply_to_status_id) {
@@ -136,7 +142,7 @@ async function processTweet(tweet) {
                     // if it links a web page:
                     if (contentType === "text/html") {
                         // add to article DB.
-                        console.log(`giving ${url} to ARticle`)
+                        console.log(`giving ${url} to Article`)
                         await article.addUrl(url)
                     } else {
                         await processMediaURL(url, linkPath, i)
@@ -169,16 +175,47 @@ async function processTweet(tweet) {
             await tmpdir.cleanup()
         }
         var url = ("https://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str);
-        var browser = await puppeteer.launch();
-        var page = (await browser).newPage();
-        (await page).goto(url, { waitUntil: 'networkidle2' });
-        (await page).screenshot({ 'path': tweet.id_str + '.png', 'fullPage': true });
-        const tx = await bundlr.createTransaction(JSON.stringify(tweet), { tags: tags })
+        console.log("Uploading...");
+
+        // await navigatePageSimple(page, url, { waitFor: 10000 });
+        await page.goto(url, { waitUntil: 'networkidle2' });
+        await new Promise(res => setTimeout(res, 1000 * 10));
+
+        await page.screenshot({ path: `${tweet.id_str}.png`, fullPage: true });
+        // Code for file compression to cut costs, 
+        //this library didn't work so I'll need to do more research to find another
+
+        // var filename;
+        // if ((fs.statSync(`${tweet.id_str}.png`).size / 1024) > 100) {
+        //     console.log("File above 100kb, compressing....");
+        //     const result = await compress({
+        //         source: `${tweet.id_str}.png`,
+        //         destination: `${tweet.id_str}-compressed.png`,
+        //         enginesSetup: {
+        //             png: { engine: 'pngquant', command: ['--quality=20-50', '-o'] },
+        //         }
+        //     });
+        //     console.log(result);
+        //     filename = `${tweet.id_str}-compressed.png`
+        // } else {
+        //     filename = `${tweet.id_str}.png`
+        // }
+        // const data = fs.readFileSync(filename);
+
+        const data = fs.readFileSync(`${tweet.id_str}.png`);
+        const tx = await bundlr.createTransaction(data, { tags: tags })
         await tx.sign();
         await tx.upload()
+
+        page.browser().disconnect();
+        fs.unlinkSync(`${tweet.id_str}.png`);
+        console.log("Complete")
         pTPS++
 
     } catch (e) {
+        fs.unlinkSync(`${tweet.id_str}.png`);
+        page.browser().disconnect();
+
         console.log(`general error: ${e.stack ?? e.message}`)
         if (tmpdir) {
             await tmpdir.cleanup()
