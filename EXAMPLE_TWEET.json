@@ -1,0 +1,363 @@
+{
+    "created_at": "Tue Jun 21 18:42:34 +0000 2022",
+    "id": 1539317873394348000,
+    "id_str": "1539317873394348033",
+    "text": "Why #GoEth allowed #EU to contact terrorist TPLF",
+    "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+    "truncated": false,
+    "in_reply_to_status_id": null,
+    "in_reply_to_status_id_str": null,
+    "in_reply_to_user_id": null,
+    "in_reply_to_user_id_str": null,
+    "in_reply_to_screen_name": null,
+    "user": {
+        "id": 1332131427282894800,
+        "id_str": "1332131427282894849",
+        "name": "Abraham",
+        "screen_name": "AbrahamThee",
+        "location": null,
+        "url": null,
+        "description": "God is greater than our greatest problem",
+        "translator_type": "none",
+        "protected": false,
+        "verified": false,
+        "followers_count": 101,
+        "friends_count": 174,
+        "listed_count": 0,
+        "favourites_count": 5254,
+        "statuses_count": 5230,
+        "created_at": "Fri Nov 27 01:17:58 +0000 2020",
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": false,
+        "lang": null,
+        "contributors_enabled": false,
+        "is_translator": false,
+        "profile_background_color": "F5F8FA",
+        "profile_background_image_url": "",
+        "profile_background_image_url_https": "",
+        "profile_background_tile": false,
+        "profile_link_color": "1DA1F2",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/1493688265982963715/kAcAdL82_normal.jpg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/1493688265982963715/kAcAdL82_normal.jpg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1332131427282894849/1640461304",
+        "default_profile": true,
+        "default_profile_image": false,
+        "following": null,
+        "follow_request_sent": null,
+        "notifications": null,
+        "withheld_in_countries": []
+    },
+    "geo": null,
+    "coordinates": null,
+    "place": null,
+    "contributors": null,
+    "quoted_status_id": 1539102481560608800,
+    "quoted_status_id_str": "1539102481560608769",
+    "quoted_status": {
+        "created_at": "Tue Jun 21 04:26:41 +0000 2022",
+        "id": 1539102481560608800,
+        "id_str": "1539102481560608769",
+        "text": "The #EU cannot dictate #Ethiopia what to do about the #GERD. On the basis of its joint statement with 🇪🇬,t  he #EU sh… https: //t.co/GEh2Hl0Zjv",
+        "display_text_range": [
+            0,
+            140
+        ],
+        "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
+        "truncated": true,
+        "in_reply_to_status_id": null,
+        "in_reply_to_status_id_str": null,
+        "in_reply_to_user_id": null,
+        "in_reply_to_user_id_str": null,
+        "in_reply_to_screen_name": null,
+        "user": {
+            "id": 4413997402,
+            "id_str": "4413997402",
+            "name": "Silabat Manaye",
+            "screen_name": "dessalegnmanaye",
+            "location": "Addis Ababa",
+            "url": null,
+            "description": "Former Senior reporter at Fana Radio #NileGeopolitics.Interested on the #HoA & #MENA #Geopolitics .Views expressed are purely my own",
+            "translator_type": "none",
+            "protected": false,
+            "verified": false,
+            "followers_count": 21553,
+            "friends_count": 234,
+            "listed_count": 10,
+            "favourites_count": 1855,
+            "statuses_count": 4202,
+            "created_at": "Tue Dec 08 08: 42: 38 +0000 2015",
+            "utc_offset": null,
+            "time_zone": null,
+            "geo_enabled": true,
+            "lang": null,
+            "contributors_enabled": false,
+            "is_translator": false,
+            "profile_background_color": "C0DEED",
+            "profile_background_image_url": "http: //abs.twimg.com/images/themes/theme1/bg.png",
+            "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+            "profile_background_tile": false,
+            "profile_link_color": "1DA1F2",
+            "profile_sidebar_border_color": "C0DEED",
+            "profile_sidebar_fill_color": "DDEEF6",
+            "profile_text_color": "333333",
+            "profile_use_background_image": true,
+            "profile_image_url": "http://pbs.twimg.com/profile_images/1507692040804524036/EiktLP3I_normal.jpg",
+            "profile_image_url_https": "https://pbs.twimg.com/profile_images/1507692040804524036/EiktLP3I_normal.jpg",
+            "profile_banner_url": "https://pbs.twimg.com/profile_banners/4413997402/1629645050",
+            "default_profile": true,
+            "default_profile_image": false,
+            "following": null,
+            "follow_request_sent": null,
+            "notifications": null,
+            "withheld_in_countries": []
+        },
+        "geo": null,
+        "coordinates": null,
+        "place": null,
+        "contributors": null,
+        "is_quote_status": false,
+        "extended_tweet": {
+            "full_text": "The #EU cannot dictate #Ethiopia what to do about the #GERD. On the basis of its joint statement with 🇪🇬,the #EU should #Nomore be allowed to sit as observer in the #GERD ne  gotiation,let alone playing “a more active role.” #EU stop talking nonsense abt z GERD.#Itsmydam,not yours. https://t.co/pnHIVMMyra",
+            "display_text_range": [
+                0,
+                280
+            ],
+            "entities": {
+                "hashtags": [
+                    {
+                        "text": "EU",
+                        "indices": [
+                            4,
+                            7
+                        ]
+                    },
+                    {
+                        "text": "Ethiopia",
+                        "indices": [
+                            23,
+                            32
+                        ]
+                    },
+                    {
+                        "text": "GERD",
+                        "indices": [
+                            54,
+                            59
+                        ]
+                    },
+                    {
+                        "text": "EU",
+                        "indices": [
+                            109,
+                            112
+                        ]
+                    },
+                    {
+                        "text": "Nomore",
+                        "indices": [
+                            120,
+                            127
+                        ]
+                    },
+                    {
+                        "text": "GERD",
+                        "indices": [
+                            165,
+                            170
+                        ]
+                    },
+                    {
+                        "text": "EU",
+                        "indices": [
+                            223,
+                            226
+                        ]
+                    },
+                    {
+                        "text": "Itsmydam",
+                        "indices": [
+                            260,
+                            269
+                        ]
+                    }
+                ],
+                "urls": [],
+                "user_mentions": [],
+                "symbols": [],
+                "media": [
+                    {
+                        "id": 1539102478985310200,
+                        "id_str": "1539102478985310208",
+                        "indices": [
+                            281,
+                            304
+                        ],
+                        "media_url": "http://pbs.twimg.com/media/FVv9jNTXsAA1yKX.jpg",
+                        "media_url_https": "https://pbs.twimg.com/media/FVv9jNTXsAA1yKX.jpg",
+                        "url": "https://t.co/pnHIVMMyra",
+                        "display_url": "pic.twitter.com/pnHIVMMyra",
+                        "expanded_url": "https://twitter.com/dessalegnmanaye/status/1539102481560608769/photo/1",
+                        "type": "photo",
+                        "sizes": {
+                            "thumb": {
+                                "w": 150,
+                                "h": 150,
+                                "resize": "crop"
+                            },
+                            "medium": {
+                                "w": 554,
+                                "h": 554,
+                                "resize": "fit"
+                            },
+                            "small": {
+                                "w": 554,
+                                "h": 554,
+                                "resize": "fit"
+                            },
+                            "large": {
+                                "w": 554,
+                                "h": 554,
+                                "resize": "fit"
+                            }
+                        }
+                    }
+                ]
+            },
+            "extended_entities": {
+                "media": [
+                    {
+                        "id": 1539102478985310200,
+                        "id_str": "1539102478985310208",
+                        "indices": [
+                            281,
+                            304
+                        ],
+                        "media_url": "http://pbs.twimg.com/media/FVv9jNTXsAA1yKX.jpg",
+                        "media_url_https": "https://pbs.twimg.com/media/FVv9jNTXsAA1yKX.jpg",
+                        "url": "https://t.co/pnHIVMMyra",
+                        "display_url": "pic.twitter.com/pnHIVMMyra",
+                        "expanded_url": "https://twitter.com/dessalegnmanaye/status/1539102481560608769/photo/1",
+                        "type": "photo",
+                        "sizes": {
+                            "thumb": {
+                                "w": 150,
+                                "h": 150,
+                                "resize": "crop"
+                            },
+                            "medium": {
+                                "w": 554,
+                                "h": 554,
+                                "resize": "fit"
+                            },
+                            "small": {
+                                "w": 554,
+                                "h": 554,
+                                "resize": "fit"
+                            },
+                            "large": {
+                                "w": 554,
+                                "h": 554,
+                                "resize": "fit"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "quote_count": 2,
+        "reply_count": 2,
+        "retweet_count": 67,
+        "favorite_count": 68,
+        "entities": {
+            "hashtags": [
+                {
+                    "text": "EU",
+                    "indices": [
+                        4,
+                        7
+                    ]
+                },
+                {
+                    "text": "Ethiopia",
+                    "indices": [
+                        23,
+                        32
+                    ]
+                },
+                {
+                    "text": "GERD",
+                    "indices": [
+                        54,
+                        59
+                    ]
+                },
+                {
+                    "text": "EU",
+                    "indices": [
+                        109,
+                        112
+                    ]
+                }
+            ],
+            "urls": [
+                {
+                    "url": "https://t.co/GEh2Hl0Zjv",
+                    "expanded_url": "https://twitter.com/i/web/status/1539102481560608769",
+                    "display_url": "twitter.com/i/web/status/1…",
+                    "indices": [
+                        117,
+                        140
+                    ]
+                }
+            ],
+            "user_mentions": [],
+            "symbols": []
+        },
+        "favorited": false,
+        "retweeted": false,
+        "possibly_sensitive": false,
+        "filter_level": "low",
+        "lang": "en"
+    },
+    "quoted_status_permalink": {
+        "url": "https://t.co/9anRNSRExl",
+        "expanded": "https://twitter.com/dessalegnmanaye/status/1539102481560608769",
+        "display": "twitter.com/dessalegnmanay…"
+    },
+    "is_quote_status": true,
+    "quote_count": 0,
+    "reply_count": 0,
+    "retweet_count": 0,
+    "favorite_count": 0,
+    "entities": {
+        "hashtags": [
+            {
+                "text": "GoEth",
+                "indices": [
+                    4,
+                    10
+                ]
+            },
+            {
+                "text": "EU",
+                "indices": [
+                    19,
+                    22
+                ]
+            }
+        ],
+        "urls": [],
+        "user_mentions": [],
+        "symbols": []
+    },
+    "favorited": false,
+    "retweeted": false,
+    "filter_level": "low",
+    "lang": "en",
+    "timestamp_ms": "1655836954817"
+}
