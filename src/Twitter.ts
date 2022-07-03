@@ -71,7 +71,7 @@ async function processTweet(tweet) {
         }
 
         /**
-         * Application: twittAR
+         * Application: Permachive - Twitter Archiver
          * Author-ID: author ID: int
          * Tweet-ID: tweet ID: int
          * Media-Manifest-ID: media manifest ID: int
