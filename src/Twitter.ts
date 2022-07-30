@@ -3,14 +3,13 @@ import Bundlr from "@bundlr-network/client"
 import tmp, { fileSync } from "tmp-promise"
 import * as p from "path"
 import { mkdir, unlink } from "fs/promises";
-import { PathLike, promises, readFileSync } from "fs";
+import { appendFile, PathLike, promises, readFileSync } from "fs";
 import { createWriteStream } from "fs";
 import { getPage, navigatePageSimple } from './lib/puppeteer-setup';
 import axios from "axios"
 import Article from "./Article";
 import fs from "fs";
-import { compress } from "compress-images";
-
+const compress_images = require("compress-images");
 
 let TPS = 0;
 let pTPS = 0
@@ -113,6 +112,11 @@ async function processTweet(tweet) {
                     }
                 }
             } catch (e) {
+                appendFile("./Twitter_errorlog.txt", `while archiving media: ${e.stack}\n`, function (err) {
+                    if (err) throw err;
+                    console.log('Error logged to file.');
+                });
+
                 console.error(`while archiving media: ${e.stack}`)
             }
 
@@ -149,6 +153,10 @@ async function processTweet(tweet) {
                     }
                 }
             } catch (e) {
+                appendFile("./Twitter_errorlog.txt", `While processing URLs: ${e.stack ?? e.message}\n`, function (err) {
+                    if (err) throw err;
+                    console.log('Error logged to file.');
+                });
                 console.error(`While processing URLs: ${e.stack ?? e.message}`)
             }
 
@@ -177,45 +185,65 @@ async function processTweet(tweet) {
         var url = ("https://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str);
         console.log("Uploading...");
 
-        // await navigatePageSimple(page, url, { waitFor: 10000 });
         await page.goto(url, { waitUntil: 'networkidle2' });
         await new Promise(res => setTimeout(res, 1000 * 10));
+        await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]').innerHTML = "")
+        await page.evaluate(() => document.querySelector('[role="status"]').innerHTML = "")
 
-        await page.screenshot({ path: `${tweet.id_str}.png`, fullPage: true });
-        // Code for file compression to cut costs, 
-        //this library didn't work so I'll need to do more research to find another
+        var filename = `screenshots/${tweet.id_str}.png`;
+        await page.screenshot({ path: filename, fullPage: true });
 
-        // var filename;
-        // if ((fs.statSync(`${tweet.id_str}.png`).size / 1024) > 100) {
-        //     console.log("File above 100kb, compressing....");
-        //     const result = await compress({
-        //         source: `${tweet.id_str}.png`,
-        //         destination: `${tweet.id_str}-compressed.png`,
-        //         enginesSetup: {
-        //             png: { engine: 'pngquant', command: ['--quality=20-50', '-o'] },
-        //         }
-        //     });
-        //     console.log(result);
-        //     filename = `${tweet.id_str}-compressed.png`
-        // } else {
-        //     filename = `${tweet.id_str}.png`
-        // }
-        // const data = fs.readFileSync(filename);
+        // Code for file compression to cut costs if file is 100kb or larger
+        await new Promise(res => setTimeout(res, 1000 * 5));
 
-        const data = fs.readFileSync(`${tweet.id_str}.png`);
-        const tx = await bundlr.createTransaction(data, { tags: tags })
-        await tx.sign();
-        await tx.upload()
+        if ((fs.statSync(filename).size / 1024) > 100) {
+            console.log("File above 100kb, compressing....");
+            await compress_images("screenshots/*.png", "screenshots/compressed/", { compress_force: false, statistic: true, autoupdate: true }, false,
+                { jpg: { engine: false, command: false } },
+                { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
+                { svg: { engine: false, command: false } },
+                { gif: { engine: false, command: false } },
+                function (error, completed, statistic) {
+                    console.log("-------------");
+                    console.log(error);
+                    console.log(completed);
+                    console.log(statistic);
+                    console.log("-------------");
+                }
+            );
+            //give it time to complete compression
+            await new Promise(res => setTimeout(res, 1000 * 5));
+            fs.unlinkSync(filename);
+            var newFilename = `screenshots/compressed/${tweet.id_str}.png`;
+            const data = fs.readFileSync(newFilename);
+            //give time to load
+            await new Promise(res => setTimeout(res, 1000 * 5));
+
+            const tx = await bundlr.createTransaction(data, { tags: tags })
+            await tx.sign();
+            await tx.upload()
+            fs.unlinkSync(newFilename);
+        } else {
+            const data = fs.readFileSync(filename);
+
+            const tx = await bundlr.createTransaction(data, { tags: tags })
+            await tx.sign();
+            await tx.upload()
+            fs.unlinkSync(filename);
+        }
+
 
         page.browser().disconnect();
-        fs.unlinkSync(`${tweet.id_str}.png`);
         console.log("Complete")
         pTPS++
 
     } catch (e) {
-        fs.unlinkSync(`${tweet.id_str}.png`);
+        fs.unlinkSync(filename);
         page.browser().disconnect();
-
+        appendFile("./Twitter_errorlog.txt", `general error: ${e.stack ?? e.message}\n`, function (err) {
+            if (err) throw err;
+            console.log('Error logged to file.');
+        });
         console.log(`general error: ${e.stack ?? e.message}`)
         if (tmpdir) {
             await tmpdir.cleanup()

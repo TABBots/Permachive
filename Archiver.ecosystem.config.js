@@ -14,6 +14,10 @@ module.exports = // ecosystem.js
         {
             "name": "Article Archiver",
             "script": "build/Article.js",
+        },
+        {
+            "name": "Youtube Archiver",
+            "script": "build/Youtube.js",
         }
     ],
 };

@@ -1,0 +1,16 @@
+{
+    "bundlrNode": "http://node2.bundlr.network",
+    "keywords": [
+        "#Ethiopia",
+        "#Tigray",
+        "#TigrayGenocide",
+        "ethiopia war"
+    ],
+    "userIDs": [],
+    "instances": 40,
+    "query": "ethiopia",
+    "walletPath": "./wallet.json",
+    "difference": 0.02,
+    "refreshPeriod": "-4 hours",
+    "queryID": "Ethiopia1"
+}

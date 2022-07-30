@@ -1,0 +1,22 @@
+{
+    "tkeys": {
+        "consumer_key": "",
+        "consumer_secret": "",
+        "token": "",
+        "token_secret": ""
+    },
+    "newsapi": "",
+    "arweave": {
+        "kty": "",
+        "n": "",
+        "e": "",
+        "d": "",
+        "p": "",
+        "q": "",
+        "dp": "",
+        "dq": "",
+        "qi": "",
+        "ext": true
+    },
+    "googleAPIkey": ""
+}

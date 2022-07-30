@@ -9,3 +9,6 @@ ARchiver.db-shm
 ARchiver.db-wal
 .env
 config.json
+Youtube-errorlog.txt
+Twitter-errorlog.txt
+log/compress-images
