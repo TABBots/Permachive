@@ -11,4 +11,5 @@ ARchiver.db-wal
 config.json
 Youtube-errorlog.txt
 Twitter-errorlog.txt
+Article-errorlog.txt
 log/compress-images

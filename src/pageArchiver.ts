@@ -4,6 +4,7 @@ import puppeteer from 'puppeteer-core';
 import jsdom, { JSDOM } from 'jsdom';
 import { extname } from 'path';
 import mime from "mime-types"
+import { appendFile } from 'fs';
 
 
 function makeDataUri(buffer: Buffer, contentType: string) {
@@ -46,6 +47,10 @@ async function retreiveResources(page: puppeteer.Page, resources: ExternalPageRe
 
         } catch (e) {
             console.log(e.message);
+            appendFile("./Article_errorlog.txt", `general error: ${e.stack ?? e.message}\n`, function (err) {
+                if (err) throw err;
+                console.log('Error logged to file.');
+            });
             results.push(Object.assign({ error: 'yes' as 'yes', message: e.message }, r));
         }
 
@@ -75,6 +80,10 @@ async function scrapeAll(url: string) {
         return { pass0, retrievedResources, embeddedResources: pass0.embeddedResources }
 
     } catch (e) {
+        appendFile("./Article_errorlog.txt", `general error: ${e.stack ?? e.message}\n`, function (err) {
+            if (err) throw err;
+            console.log('Error logged to file.');
+        });
         page.browser().disconnect();
         throw (e);
     }
