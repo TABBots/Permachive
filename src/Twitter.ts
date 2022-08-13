@@ -59,13 +59,12 @@ async function main() {
 
 async function processTweet(tweet) {
     let tmpdir;
-    const page = await getPage();
+
 
     try {
 
         TPS++
         if (tweet.retweeted_status) { //retweet, ignore.
-            page.browser().disconnect();
             return;
         }
 
@@ -112,7 +111,6 @@ async function processTweet(tweet) {
                     }
                 }
             } catch (e) {
-                page.browser().disconnect();
                 appendFile("./Twitter_errorlog.txt", `while archiving media: ${e.stack}\n`, function (err) {
                     if (err) throw err;
                     console.log('Error logged to file.');
@@ -154,7 +152,6 @@ async function processTweet(tweet) {
                     }
                 }
             } catch (e) {
-                page.browser().disconnect();
                 appendFile("./Twitter_errorlog.txt", `While processing URLs: ${e.stack ?? e.message}\n`, function (err) {
                     if (err) throw err;
                     console.log('Error logged to file.');
@@ -186,11 +183,11 @@ async function processTweet(tweet) {
         }
         var url = ("https://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str);
         console.log("Uploading...");
-
+        const page = await getPage();
         await page.goto(url, { waitUntil: 'networkidle2' });
         //await new Promise(res => setTimeout(res, 1000 * 10));
-        await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]').innerHTML = "")
-        await page.evaluate(() => document.querySelector('[role="status"]').innerHTML = "")
+        await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]') != null ? document.querySelector('[data-testid="BottomBar"]').innerHTML = "" : null)
+        await page.evaluate(() => document.querySelector('[role="status"]') != null ? document.querySelector('[role="status"]').innerHTML = "" : null)
 
         var filename = `screenshots/${tweet.id_str}.png`;
         await page.screenshot({ path: filename, fullPage: true });
@@ -214,6 +211,7 @@ async function processTweet(tweet) {
                             var newFilename = `screenshots/compressed/${tweet.id_str}.png`;
                             await new Promise(res => fs.readFile(newFilename, function (err, d) {
                                 if (err) {
+                                    page.browser().disconnect();
                                     throw err;
                                 } else {
                                     res(d);
@@ -226,6 +224,7 @@ async function processTweet(tweet) {
                                 }
                                 catch (e) {
                                     //keep trying to find the file, if its not there after 10 seconds, continue
+                                    page.browser().disconnect();
                                     var startTime = Date.now();
                                     while ((Date.now() - startTime) < 5000) {
                                         if (fs.existsSync(newFilename)) {
@@ -244,6 +243,9 @@ async function processTweet(tweet) {
                                         break;
                                     }
                                 }
+                            }).catch(x => {
+                                page.browser().disconnect();
+                                throw x;
                             });
                         }
                     }
@@ -251,10 +253,10 @@ async function processTweet(tweet) {
                 )
 
             } catch (e) {
-                page.browser().disconnect();
                 console.log("Compression failed, uploading original file");
                 await new Promise(res => fs.readFile(filename, function (err, d) {
                     if (err) {
+                        page.browser().disconnect();
                         throw err;
                     } else {
                         res(d);
@@ -278,6 +280,7 @@ async function processTweet(tweet) {
         } else {
             await new Promise(res => fs.readFile(filename, function (err, d) {
                 if (err) {
+                    page.browser().disconnect();
                     throw err;
                 } else {
                     res(d);
@@ -289,6 +292,7 @@ async function processTweet(tweet) {
                     await tx.upload()
                 }
                 catch (e) {
+                    page.browser().disconnect();
                     throw e;
                 }
 
@@ -310,7 +314,7 @@ async function processTweet(tweet) {
 
     } catch (e) {
         //keep trying to find the file, if its not there after 10 seconds, continue
-        page.browser().disconnect();
+
         var startTime = Date.now();
         while ((Date.now() - startTime) < 5000) {
             if (fs.existsSync(filename)) {
