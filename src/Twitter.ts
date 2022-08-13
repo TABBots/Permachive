@@ -12,9 +12,11 @@ import fs from "fs";
 const compress_images = require("compress-images");
 
 let TPS = 0;
-let pTPS = 0
+let pTPS = 0;
+let total = 0;
 setInterval(() => {
-    console.log(`TPS: ${TPS} - pTPS: ${pTPS}`); TPS = 0; pTPS = 0
+    total += TPS;
+    console.log(`TPS: ${TPS} - pTPS: ${pTPS} - total: ${total}`); TPS = 0; pTPS = 0
 }, 1000)
 
 const checkPath = async (path: PathLike): Promise<boolean> => { return promises.stat(path).then(_ => true).catch(_ => false) }
@@ -55,9 +57,6 @@ async function main() {
     // twitter.follow("957688150574469122")
 }
 
-
-
-
 async function processTweet(tweet) {
     let tmpdir;
     const page = await getPage();
@@ -66,6 +65,7 @@ async function processTweet(tweet) {
 
         TPS++
         if (tweet.retweeted_status) { //retweet, ignore.
+            page.browser().disconnect();
             return;
         }
 
@@ -112,6 +112,7 @@ async function processTweet(tweet) {
                     }
                 }
             } catch (e) {
+                page.browser().disconnect();
                 appendFile("./Twitter_errorlog.txt", `while archiving media: ${e.stack}\n`, function (err) {
                     if (err) throw err;
                     console.log('Error logged to file.');
@@ -153,6 +154,7 @@ async function processTweet(tweet) {
                     }
                 }
             } catch (e) {
+                page.browser().disconnect();
                 appendFile("./Twitter_errorlog.txt", `While processing URLs: ${e.stack ?? e.message}\n`, function (err) {
                     if (err) throw err;
                     console.log('Error logged to file.');
@@ -186,7 +188,7 @@ async function processTweet(tweet) {
         console.log("Uploading...");
 
         await page.goto(url, { waitUntil: 'networkidle2' });
-        await new Promise(res => setTimeout(res, 1000 * 10));
+        //await new Promise(res => setTimeout(res, 1000 * 10));
         await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]').innerHTML = "")
         await page.evaluate(() => document.querySelector('[role="status"]').innerHTML = "")
 
@@ -194,52 +196,128 @@ async function processTweet(tweet) {
         await page.screenshot({ path: filename, fullPage: true });
 
         // Code for file compression to cut costs if file is 100kb or larger
-        await new Promise(res => setTimeout(res, 1000 * 5));
-
+        var data: Buffer;
         if ((fs.statSync(filename).size / 1024) > 100) {
             console.log("File above 100kb, compressing....");
-            await compress_images("screenshots/*.png", "screenshots/compressed/", { compress_force: false, statistic: true, autoupdate: true }, false,
-                { jpg: { engine: false, command: false } },
-                { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
-                { svg: { engine: false, command: false } },
-                { gif: { engine: false, command: false } },
-                function (error, completed, statistic) {
-                    console.log("-------------");
-                    console.log(error);
-                    console.log(completed);
-                    console.log(statistic);
-                    console.log("-------------");
-                }
-            );
-            //give it time to complete compression
-            await new Promise(res => setTimeout(res, 1000 * 5));
-            fs.unlinkSync(filename);
-            var newFilename = `screenshots/compressed/${tweet.id_str}.png`;
-            const data = fs.readFileSync(newFilename);
-            //give time to load
-            await new Promise(res => setTimeout(res, 1000 * 5));
+            try {
+                await compress_images("screenshots/*.png", "screenshots/compressed/", { compress_force: false, statistic: true, autoupdate: true }, false,
+                    { jpg: { engine: false, command: false } },
+                    { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
+                    { svg: { engine: false, command: false } },
+                    { gif: { engine: false, command: false } },
+                    async function (error, completed, statistic) {
+                        if (error) {
+                            throw new Error("Compression failed");
+                        } else if (completed) {
+                            fs.unlinkSync(filename);
+                            console.log("Compression successful")
+                            var newFilename = `screenshots/compressed/${tweet.id_str}.png`;
+                            await new Promise(res => fs.readFile(newFilename, function (err, d) {
+                                if (err) {
+                                    throw err;
+                                } else {
+                                    res(d);
+                                }
+                            })).then(async (data) => {
+                                try {
+                                    const tx = await bundlr.createTransaction(data, { tags: tags })
+                                    await tx.sign();
+                                    await tx.upload()
+                                }
+                                catch (e) {
+                                    //keep trying to find the file, if its not there after 10 seconds, continue
+                                    var startTime = Date.now();
+                                    while ((Date.now() - startTime) < 5000) {
+                                        if (fs.existsSync(newFilename)) {
+                                            fs.unlinkSync(newFilename);
+                                            break;
+                                        }
+                                    }
+                                    throw e;
+                                }
 
-            const tx = await bundlr.createTransaction(data, { tags: tags })
-            await tx.sign();
-            await tx.upload()
-            fs.unlinkSync(newFilename);
+                                //keep trying to find the file, if its not there after 10 seconds, continue
+                                var startTime = Date.now();
+                                while ((Date.now() - startTime) < 5000) {
+                                    if (fs.existsSync(newFilename)) {
+                                        fs.unlinkSync(newFilename);
+                                        break;
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                )
+
+            } catch (e) {
+                page.browser().disconnect();
+                console.log("Compression failed, uploading original file");
+                await new Promise(res => fs.readFile(filename, function (err, d) {
+                    if (err) {
+                        throw err;
+                    } else {
+                        res(d);
+                    }
+                })).then(async (data) => {
+                    const tx = await bundlr.createTransaction(data, { tags: tags })
+                    await tx.sign();
+                    await tx.upload()
+                    //keep trying to find the file, if its not there after 10 seconds, continue
+                    var startTime = Date.now();
+                    while ((Date.now() - startTime) < 5000) {
+                        if (fs.existsSync(filename)) {
+                            fs.unlinkSync(filename);
+                            break;
+                        }
+                    }
+                });
+            }
+
+
         } else {
-            const data = fs.readFileSync(filename);
+            await new Promise(res => fs.readFile(filename, function (err, d) {
+                if (err) {
+                    throw err;
+                } else {
+                    res(d);
+                }
+            })).then(async (data) => {
+                try {
+                    const tx = await bundlr.createTransaction(data, { tags: tags })
+                    await tx.sign();
+                    await tx.upload()
+                }
+                catch (e) {
+                    throw e;
+                }
 
-            const tx = await bundlr.createTransaction(data, { tags: tags })
-            await tx.sign();
-            await tx.upload()
-            fs.unlinkSync(filename);
+                //keep trying to find the file, if its not there after 10 seconds, continue
+                var startTime = Date.now();
+                while ((Date.now() - startTime) < 5000) {
+                    if (fs.existsSync(filename)) {
+                        fs.unlinkSync(filename);
+                        break;
+                    }
+                }
+            });
+            page.browser().disconnect();
+
         }
-
-
         page.browser().disconnect();
-        console.log("Complete")
-        pTPS++
+        console.log("Complete");
+        pTPS++;
 
     } catch (e) {
-        fs.unlinkSync(filename);
+        //keep trying to find the file, if its not there after 10 seconds, continue
         page.browser().disconnect();
+        var startTime = Date.now();
+        while ((Date.now() - startTime) < 5000) {
+            if (fs.existsSync(filename)) {
+                fs.unlinkSync(filename);
+                break;
+            }
+        }
         appendFile("./Twitter_errorlog.txt", `general error: ${e.stack ?? e.message}\n`, function (err) {
             if (err) throw err;
             console.log('Error logged to file.');
@@ -249,6 +327,7 @@ async function processTweet(tweet) {
             await tmpdir.cleanup()
         }
     }
+
 }
 
 
