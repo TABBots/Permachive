@@ -33,7 +33,7 @@ async function beginArchive(config: any) {
     //this will hold the time from the start of last search
     var startTime = new Date();
     var prevStartTime = startTime;
-    var keywords = config.keywords.join(" ")
+    var keywords = config.keywords.join(" | ")
     console.log(keywords);
 
     while (true) {
