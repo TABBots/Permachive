@@ -217,24 +217,10 @@ async function processTweet(tweet) {
                                     res(d);
                                 }
                             })).then(async (data) => {
-                                try {
-                                    const tx = await bundlr.createTransaction(data, { tags: tags })
-                                    await tx.sign();
-                                    await tx.upload()
-                                }
-                                catch (e) {
-                                    //keep trying to find the file, if its not there after 10 seconds, continue
+                                UploadToBundlr(data, tags).catch(e => {
                                     page.browser().disconnect();
-                                    var startTime = Date.now();
-                                    while ((Date.now() - startTime) < 5000) {
-                                        if (fs.existsSync(newFilename)) {
-                                            fs.unlinkSync(newFilename);
-                                            break;
-                                        }
-                                    }
                                     throw e;
-                                }
-
+                                });
                                 //keep trying to find the file, if its not there after 10 seconds, continue
                                 var startTime = Date.now();
                                 while ((Date.now() - startTime) < 5000) {
@@ -245,6 +231,13 @@ async function processTweet(tweet) {
                                 }
                             }).catch(x => {
                                 page.browser().disconnect();
+                                var startTime = Date.now();
+                                while ((Date.now() - startTime) < 5000) {
+                                    if (fs.existsSync(newFilename)) {
+                                        fs.unlinkSync(newFilename);
+                                        break;
+                                    }
+                                }
                                 throw x;
                             });
                         }
@@ -262,9 +255,10 @@ async function processTweet(tweet) {
                         res(d);
                     }
                 })).then(async (data) => {
-                    const tx = await bundlr.createTransaction(data, { tags: tags })
-                    await tx.sign();
-                    await tx.upload()
+                    UploadToBundlr(data, tags).catch(e => {
+                        page.browser().disconnect();
+                        throw e;
+                    });
                     //keep trying to find the file, if its not there after 10 seconds, continue
                     var startTime = Date.now();
                     while ((Date.now() - startTime) < 5000) {
@@ -286,15 +280,10 @@ async function processTweet(tweet) {
                     res(d);
                 }
             })).then(async (data) => {
-                try {
-                    const tx = await bundlr.createTransaction(data, { tags: tags })
-                    await tx.sign();
-                    await tx.upload()
-                }
-                catch (e) {
+                UploadToBundlr(data, tags).catch(e => {
                     page.browser().disconnect();
                     throw e;
-                }
+                });
 
                 //keep trying to find the file, if its not there after 10 seconds, continue
                 var startTime = Date.now();
@@ -333,7 +322,16 @@ async function processTweet(tweet) {
     }
 
 }
-
+async function UploadToBundlr(data: any, tags: any): Promise<void> {
+    const tx = await bundlr.createTransaction(data, { tags: tags })
+    await tx.sign();
+    try {
+        await tx.upload()
+    } catch (e) {
+        console.log(e.message);
+        return;
+    }
+}
 
 export async function processMediaURL(url: string, dir: string, i: number) {
     return new Promise(async (resolve, reject) => {
