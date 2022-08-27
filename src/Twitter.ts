@@ -184,6 +184,7 @@ async function processTweet(tweet) {
         var url = ("https://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str);
         console.log("Uploading...");
         const page = await getPage();
+        await page.setDefaultNavigationTimeout(0);
         await page.goto(url, { waitUntil: 'networkidle2' });
         //await new Promise(res => setTimeout(res, 1000 * 10));
         await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]') != null ? document.querySelector('[data-testid="BottomBar"]').innerHTML = "" : null)
