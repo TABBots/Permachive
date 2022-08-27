@@ -191,7 +191,7 @@ async function processTweet(tweet) {
 
         var filename = `screenshots/${tweet.id_str}.png`;
         await page.screenshot({ path: filename, fullPage: true });
-
+        page.browser().disconnect();
         // Code for file compression to cut costs if file is 100kb or larger
         var data: Buffer;
         if ((fs.statSync(filename).size / 1024) > 100) {
@@ -211,14 +211,12 @@ async function processTweet(tweet) {
                             var newFilename = `screenshots/compressed/${tweet.id_str}.png`;
                             await new Promise(res => fs.readFile(newFilename, function (err, d) {
                                 if (err) {
-                                    page.browser().disconnect();
                                     throw err;
                                 } else {
                                     res(d);
                                 }
                             })).then(async (data) => {
                                 UploadToBundlr(data, tags).catch(e => {
-                                    page.browser().disconnect();
                                     throw e;
                                 });
                                 //keep trying to find the file, if its not there after 10 seconds, continue
@@ -230,7 +228,6 @@ async function processTweet(tweet) {
                                     }
                                 }
                             }).catch(x => {
-                                page.browser().disconnect();
                                 var startTime = Date.now();
                                 while ((Date.now() - startTime) < 5000) {
                                     if (fs.existsSync(newFilename)) {
@@ -249,14 +246,12 @@ async function processTweet(tweet) {
                 console.log("Compression failed, uploading original file");
                 await new Promise(res => fs.readFile(filename, function (err, d) {
                     if (err) {
-                        page.browser().disconnect();
                         throw err;
                     } else {
                         res(d);
                     }
                 })).then(async (data) => {
                     UploadToBundlr(data, tags).catch(e => {
-                        page.browser().disconnect();
                         throw e;
                     });
                     //keep trying to find the file, if its not there after 10 seconds, continue
@@ -274,14 +269,12 @@ async function processTweet(tweet) {
         } else {
             await new Promise(res => fs.readFile(filename, function (err, d) {
                 if (err) {
-                    page.browser().disconnect();
                     throw err;
                 } else {
                     res(d);
                 }
             })).then(async (data) => {
                 UploadToBundlr(data, tags).catch(e => {
-                    page.browser().disconnect();
                     throw e;
                 });
 
@@ -294,10 +287,8 @@ async function processTweet(tweet) {
                     }
                 }
             });
-            page.browser().disconnect();
 
         }
-        page.browser().disconnect();
         console.log("Complete");
         pTPS++;
 
