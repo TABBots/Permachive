@@ -192,7 +192,7 @@ async function processTweet(tweet) {
 
         var filename = `screenshots/${tweet.id_str}.png`;
         await page.screenshot({ path: filename, fullPage: true });
-        await page.browser().close();
+        await page.browser().disconnect();
         // Code for file compression to cut costs if file is 100kb or larger
         var data: Buffer;
         if ((fs.statSync(filename).size / 1024) > 100) {
