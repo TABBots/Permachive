@@ -9,13 +9,16 @@ import { getPage, navigatePageSimple } from './lib/puppeteer-setup';
 import axios from "axios"
 import Article from "./Article";
 import fs from "fs";
+import { Mutex, MutexInterface, Semaphore, SemaphoreInterface, withTimeout } from 'async-mutex';
+import { release } from "os";
+
 const compress_images = require("compress-images");
 
 let TPS = 0;
 let pTPS = 0;
 let total = 0;
 setInterval(() => {
-    total += TPS;
+    total += pTPS;
     console.log(`TPS: ${TPS} - pTPS: ${pTPS} - total: ${total}`); TPS = 0; pTPS = 0
 }, 1000)
 
@@ -24,7 +27,7 @@ const checkPath = async (path: PathLike): Promise<boolean> => { return promises.
 let twitter
 let bundlr
 let article: Article;
-
+const mutex = new Mutex();
 
 async function main() {
 
@@ -59,7 +62,8 @@ async function main() {
 
 async function processTweet(tweet) {
     let tmpdir;
-
+    await mutex.waitForUnlock();
+    const release = await mutex.acquire();
 
     try {
 
@@ -183,22 +187,22 @@ async function processTweet(tweet) {
         }
         var url = ("https://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str);
         console.log("Uploading...");
+
         const page = await getPage();
-        await page.setDefaultNavigationTimeout(0);
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        await navigatePageSimple(page, url, { waitFor: 10000 });
         //await new Promise(res => setTimeout(res, 1000 * 10));
         await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]') != null ? document.querySelector('[data-testid="BottomBar"]').innerHTML = "" : null)
         await page.evaluate(() => document.querySelector('[role="status"]') != null ? document.querySelector('[role="status"]').innerHTML = "" : null)
 
         var filename = `screenshots/${tweet.id_str}.png`;
         await page.screenshot({ path: filename, fullPage: true });
-        await page.browser().disconnect();
+        page.browser().disconnect();
         // Code for file compression to cut costs if file is 100kb or larger
         var data: Buffer;
         if ((fs.statSync(filename).size / 1024) > 100) {
             console.log("File above 100kb, compressing....");
             try {
-                await compress_images("screenshots/*.png", "screenshots/compressed/", { compress_force: false, statistic: true, autoupdate: true }, false,
+                compress_images(filename, "screenshots/compressed/", { compress_force: false, statistic: true, autoupdate: true }, false,
                     { jpg: { engine: false, command: false } },
                     { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
                     { svg: { engine: false, command: false } },
@@ -220,21 +224,12 @@ async function processTweet(tweet) {
                                 UploadToBundlr(data, tags).catch(e => {
                                     throw e;
                                 });
-                                //keep trying to find the file, if its not there after 10 seconds, continue
-                                var startTime = Date.now();
-                                while ((Date.now() - startTime) < 5000) {
-                                    if (fs.existsSync(newFilename)) {
-                                        fs.unlinkSync(newFilename);
-                                        break;
-                                    }
+                                if (fs.existsSync(newFilename)) {
+                                    fs.unlinkSync(newFilename);
                                 }
                             }).catch(x => {
-                                var startTime = Date.now();
-                                while ((Date.now() - startTime) < 5000) {
-                                    if (fs.existsSync(newFilename)) {
-                                        fs.unlinkSync(newFilename);
-                                        break;
-                                    }
+                                if (fs.existsSync(newFilename)) {
+                                    fs.unlinkSync(newFilename);
                                 }
                                 throw x;
                             });
@@ -255,13 +250,8 @@ async function processTweet(tweet) {
                     UploadToBundlr(data, tags).catch(e => {
                         throw e;
                     });
-                    //keep trying to find the file, if its not there after 10 seconds, continue
-                    var startTime = Date.now();
-                    while ((Date.now() - startTime) < 5000) {
-                        if (fs.existsSync(filename)) {
-                            fs.unlinkSync(filename);
-                            break;
-                        }
+                    if (fs.existsSync(filename)) {
+                        fs.unlinkSync(filename);
                     }
                 });
             }
@@ -279,29 +269,20 @@ async function processTweet(tweet) {
                     throw e;
                 });
 
-                //keep trying to find the file, if its not there after 10 seconds, continue
-                var startTime = Date.now();
-                while ((Date.now() - startTime) < 5000) {
-                    if (fs.existsSync(filename)) {
-                        fs.unlinkSync(filename);
-                        break;
-                    }
+                if (fs.existsSync(filename)) {
+                    fs.unlinkSync(filename);
                 }
             });
 
         }
+        release();
         console.log("Complete");
         pTPS++;
 
-    } catch (e) {
-        //keep trying to find the file, if its not there after 10 seconds, continue
 
-        var startTime = Date.now();
-        while ((Date.now() - startTime) < 5000) {
-            if (fs.existsSync(filename)) {
-                fs.unlinkSync(filename);
-                break;
-            }
+    } catch (e) {
+        if (fs.existsSync(filename)) {
+            fs.unlinkSync(filename);
         }
         appendFile("./Twitter_errorlog.txt", `general error: ${e.stack ?? e.message}\n`, function (err) {
             if (err) throw err;
@@ -311,6 +292,8 @@ async function processTweet(tweet) {
         if (tmpdir) {
             await tmpdir.cleanup()
         }
+    } finally {
+        release();
     }
 
 }

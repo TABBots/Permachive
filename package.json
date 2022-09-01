@@ -19,6 +19,7 @@
     "@types/puppeteer": "^5.4.4",
     "@types/puppeteer-core": "^2.0.0",
     "arweave": "^1.11.4",
+    "async-mutex": "^0.3.2",
     "axios": "^0.26.0",
     "better-sqlite3": "^7.5.0",
     "cjs": "^0.0.11",
