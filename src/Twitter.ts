@@ -62,15 +62,13 @@ async function main() {
 
 async function processTweet(tweet) {
     let tmpdir;
-    await mutex.waitForUnlock();
-    const release = await mutex.acquire();
-
     try {
 
         TPS++
         if (tweet.retweeted_status) { //retweet, ignore.
             return;
         }
+
 
         /**
          * Application: Permachive - Twitter Archiver
@@ -187,59 +185,76 @@ async function processTweet(tweet) {
         }
         var url = ("https://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str);
         console.log("Uploading...");
-
-        const page = await getPage();
-        await navigatePageSimple(page, url, { waitFor: 10000 });
-        //await new Promise(res => setTimeout(res, 1000 * 10));
-        await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]') != null ? document.querySelector('[data-testid="BottomBar"]').innerHTML = "" : null)
-        await page.evaluate(() => document.querySelector('[role="status"]') != null ? document.querySelector('[role="status"]').innerHTML = "" : null)
-
         var filename = `screenshots/${tweet.id_str}.png`;
-        await page.screenshot({ path: filename, fullPage: true });
-        page.browser().disconnect();
-        // Code for file compression to cut costs if file is 100kb or larger
-        var data: Buffer;
-        if ((fs.statSync(filename).size / 1024) > 100) {
-            console.log("File above 100kb, compressing....");
-            try {
-                compress_images(filename, "screenshots/compressed/", { compress_force: false, statistic: true, autoupdate: true }, false,
-                    { jpg: { engine: false, command: false } },
-                    { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
-                    { svg: { engine: false, command: false } },
-                    { gif: { engine: false, command: false } },
-                    async function (error, completed, statistic) {
-                        if (error) {
-                            throw new Error("Compression failed");
-                        } else if (completed) {
-                            fs.unlinkSync(filename);
-                            console.log("Compression successful")
-                            var newFilename = `screenshots/compressed/${tweet.id_str}.png`;
-                            await new Promise(res => fs.readFile(newFilename, function (err, d) {
-                                if (err) {
-                                    throw err;
-                                } else {
-                                    res(d);
-                                }
-                            })).then(async (data) => {
-                                UploadToBundlr(data, tags).catch(e => {
-                                    throw e;
+        await mutex.runExclusive(async () => {
+            const page = await getPage();
+            await navigatePageSimple(page, url, { waitFor: 10000 });
+            //await new Promise(res => setTimeout(res, 1000 * 10));
+            await page.evaluate(() => document.querySelector('[data-testid="BottomBar"]') != null ? document.querySelector('[data-testid="BottomBar"]').innerHTML = "" : null)
+            await page.evaluate(() => document.querySelector('[role="status"]') != null ? document.querySelector('[role="status"]').innerHTML = "" : null)
+            await page.screenshot({ path: filename, fullPage: true });
+            page.browser().disconnect();
+            // Code for file compression to cut costs if file is 100kb or larger
+            var data: Buffer;
+            if ((fs.statSync(filename).size / 1024) > 100) {
+                console.log("File above 100kb, compressing....");
+                try {
+                    compress_images(filename, "screenshots/compressed/", { compress_force: false, statistic: true, autoupdate: true }, false,
+                        { jpg: { engine: false, command: false } },
+                        { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
+                        { svg: { engine: false, command: false } },
+                        { gif: { engine: false, command: false } },
+                        async function (error, completed, statistic) {
+                            if (error) {
+                                throw new Error("Compression failed");
+                            } else if (completed) {
+                                fs.unlinkSync(filename);
+                                console.log("Compression successful")
+                                var newFilename = `screenshots/compressed/${tweet.id_str}.png`;
+                                await new Promise(res => fs.readFile(newFilename, function (err, d) {
+                                    if (err) {
+                                        throw err;
+                                    } else {
+                                        res(d);
+                                    }
+                                })).then(async (data) => {
+                                    UploadToBundlr(data, tags).catch(e => {
+                                        throw e;
+                                    });
+                                    if (fs.existsSync(newFilename)) {
+                                        fs.unlinkSync(newFilename);
+                                    }
+                                }).catch(x => {
+                                    if (fs.existsSync(newFilename)) {
+                                        fs.unlinkSync(newFilename);
+                                    }
+                                    throw x;
                                 });
-                                if (fs.existsSync(newFilename)) {
-                                    fs.unlinkSync(newFilename);
-                                }
-                            }).catch(x => {
-                                if (fs.existsSync(newFilename)) {
-                                    fs.unlinkSync(newFilename);
-                                }
-                                throw x;
-                            });
+                            }
                         }
-                    }
 
-                )
+                    )
 
-            } catch (e) {
-                console.log("Compression failed, uploading original file");
+                } catch (e) {
+                    console.log("Compression failed, uploading original file");
+                    await new Promise(res => fs.readFile(filename, function (err, d) {
+                        if (err) {
+                            throw err;
+                        } else {
+                            res(d);
+                        }
+                    })).then(async (data) => {
+                        UploadToBundlr(data, tags).catch(e => {
+                            throw e;
+                        });
+                        if (fs.existsSync(filename)) {
+                            fs.unlinkSync(filename);
+                        }
+                    });
+                }
+
+
+            } else {
                 await new Promise(res => fs.readFile(filename, function (err, d) {
                     if (err) {
                         throw err;
@@ -250,35 +265,16 @@ async function processTweet(tweet) {
                     UploadToBundlr(data, tags).catch(e => {
                         throw e;
                     });
+
                     if (fs.existsSync(filename)) {
                         fs.unlinkSync(filename);
                     }
                 });
+
             }
-
-
-        } else {
-            await new Promise(res => fs.readFile(filename, function (err, d) {
-                if (err) {
-                    throw err;
-                } else {
-                    res(d);
-                }
-            })).then(async (data) => {
-                UploadToBundlr(data, tags).catch(e => {
-                    throw e;
-                });
-
-                if (fs.existsSync(filename)) {
-                    fs.unlinkSync(filename);
-                }
-            });
-
-        }
-        release();
-        console.log("Complete");
-        pTPS++;
-
+            console.log("Complete");
+            pTPS++;
+        });
 
     } catch (e) {
         if (fs.existsSync(filename)) {
@@ -292,9 +288,7 @@ async function processTweet(tweet) {
         if (tmpdir) {
             await tmpdir.cleanup()
         }
-    } finally {
-        release();
-    }
+    };
 
 }
 async function UploadToBundlr(data: any, tags: any): Promise<void> {
