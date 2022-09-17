@@ -22,6 +22,17 @@ setInterval(() => {
     console.log(`TPS: ${TPS} - pTPS: ${pTPS} - total: ${total}`); TPS = 0; pTPS = 0
 }, 1000)
 
+setInterval(async () => {
+    const balance = (await bundlr.getLoadedBalance()) / 1e12;
+    console.log("Balance check. Current balance: " + balance + " AR");
+    // If balance is < 1 AR
+    if (balance < 1) {
+        // Fund your account with 1 AR
+        console.log("Balance below 1 AR. Funding node with 1 AR...");
+        await bundlr.fund(1e12);
+    }
+}, 900000); //Once every 15 minutes, check the funds
+
 const checkPath = async (path: PathLike): Promise<boolean> => { return promises.stat(path).then(_ => true).catch(_ => false) }
 
 let twitter
@@ -43,6 +54,16 @@ async function main() {
     })
     bundlr = new Bundlr(config.bundlrNode, "arweave", keys.arweave)
     article = new Article(config)
+
+    //initial funding check
+    const balance = (await bundlr.getLoadedBalance()) / 1e12;
+    console.log("Balance check. Current balance: " + balance + " AR");
+    // If balance is < 1 AR
+    if (balance < 1) {
+        // Fund your account with 1 AR
+        console.log("Balance below 1 AR. Funding node with 1 AR...");
+        await bundlr.fund(1e12);
+    }
 
     console.log(`Loaded with account address: ${bundlr.address}`)
     //await processTweet(tweet)
